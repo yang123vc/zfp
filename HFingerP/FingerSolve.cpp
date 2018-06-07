@@ -12,6 +12,7 @@ FingerSolve::~FingerSolve()
 {
 }
 
+//写入bmp图片
 int FingerSolve::WriteBMPImgFile(char * dstFileName, unsigned char ** pusImgData)
 {
 	FILE *fp;
@@ -67,6 +68,7 @@ wchar_t * FingerSolve::ToWideChar(char * str)
 int FingerSolve::readBMP2buf(char * filename, unsigned char ** data, int &rWidth, int&rHeight, int&iDepth)
 {
 	CImage image;
+	
 	HRESULT r = image.Load(ToWideChar(filename));
 	if (FAILED(r) || image.IsNull()) {
 		return -1;
@@ -228,7 +230,7 @@ int  FingerSolve::MidFilter(unsigned char *ucImg, unsigned char *ucDstImg, int i
 }
 
 
-
+//排序
 void FingerSolve::Sort(unsigned char * data, int dsize)
 {
 	unsigned char temp = 0;
@@ -327,7 +329,7 @@ int FingerSolve::ImgDirection(unsigned char * ucImg, float * fDirc, int iWidth, 
 					dy[i][j] = int(ucImg[index1] - ucImg[index3]);
 
 					if (abs(dx[i][j]) > 50) {
-						if (dx[i][j] >0)
+						if (dx[i][j] > 0)
 						{
 							dx[i][j] = 255;
 						}
@@ -342,7 +344,7 @@ int FingerSolve::ImgDirection(unsigned char * ucImg, float * fDirc, int iWidth, 
 					}
 
 					if (abs(dy[i][j]) > 50) {
-						if (dy[i][j] >0)
+						if (dy[i][j] > 0)
 						{
 							dy[i][j] = 255;
 						}
@@ -379,7 +381,7 @@ int FingerSolve::ImgDirection(unsigned char * ucImg, float * fDirc, int iWidth, 
 
 }
 
-
+//低通滤波
 int FingerSolve::DircLowPass(float * fDirc, float * fFitDirc, int iWidth, int iHeight)
 {
 	const int DIR_FILTER_SIZE = 2;
@@ -470,6 +472,7 @@ int FingerSolve::DircLowPass(float * fDirc, float * fFitDirc, int iWidth, int iH
 	return 0;
 }
 
+//频率计算
 int FingerSolve::Frequency(unsigned char * ucImg, float * fDirection, float * fFrequency, int iWidth, int iHeight)
 {
 	const int SIZE_L = 32;
@@ -598,6 +601,7 @@ int FingerSolve::Frequency(unsigned char * ucImg, float * fDirection, float * fF
 	return 0;
 }
 
+//掩码计算
 int FingerSolve::GetMask(unsigned char * unImg, float * fDirection, float * fFrequency, unsigned char * ucMask, int iWidth, int iHeight)
 {
 	float freqMin = 1.0 / 25.0;
@@ -680,6 +684,7 @@ int FingerSolve::GetMask(unsigned char * unImg, float * fDirection, float * fFre
 	return 0;
 }
 
+//gabor增强
 int FingerSolve::GaborEnhance(unsigned char * ucImg, float*fDirection, float * fFrequency, unsigned char * ucMask, unsigned char * ucImgEnhanced, int iWidth, int iHeight)
 {
 	const float PI = 3.141592654;
@@ -732,27 +737,29 @@ int FingerSolve::GaborEnhance(unsigned char * ucImg, float*fDirection, float * f
 
 }
 
+//计算二值化图像
 int FingerSolve::BinaryImg(unsigned char * ucImage, unsigned char * ucBinImage, int iWidth, int iHeight, unsigned char uThreshold)
 {
 	unsigned char *pStart = ucImage, *pEnd = ucImage + iWidth * iHeight;
 	unsigned char *pDest = ucBinImage;
-	while (pStart<pEnd)
+	while (pStart < pEnd)
 	{
-		*pDest = *pStart>uThreshold ? 1 : 0;
+		*pDest = *pStart > uThreshold ? 1 : 0;
 		pStart++;
 		pDest++;
 	}
 	return 0;
 }
 
+//转化为256灰度图像
 int FingerSolve::BinaryToGray(unsigned char * ucBinImg, unsigned char * ucGrayImg, int iWidth, int iHeight)
 {
 	unsigned char *pStart = ucBinImg, *pEnd = ucBinImg + iWidth * iHeight;
 	unsigned char *pDest = ucGrayImg;
 
-	while (pStart<pEnd)
+	while (pStart < pEnd)
 	{
-		*pDest = (*pStart)>0 ? 255 : 0;
+		*pDest = (*pStart) > 0 ? 255 : 0;
 		pStart++;
 		pDest++;
 	}
@@ -760,6 +767,7 @@ int FingerSolve::BinaryToGray(unsigned char * ucBinImg, unsigned char * ucGrayIm
 	return 0;
 }
 
+//指纹细化
 int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedImage, int iWidth, int iHeight, int iIterativeLimit)
 {
 	unsigned char x1, x2, x3, x4, x5, x6, x7, x8, xp;
@@ -771,17 +779,17 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 
 	memcpy(ucThinnedImage, ucBinedImg, iWidth*iHeight);
 
-	for (int it = 0; it<iIterativeLimit; it++)
+	for (int it = 0; it < iIterativeLimit; it++)
 	{
 		iDeletedPoints = 0;
 
-		for (int i = 1; i<iHeight - 1; i++)
+		for (int i = 1; i < iHeight - 1; i++)
 		{
 			pUp = ucBinedImg + (i - 1)*iWidth;
 			pImg = ucBinedImg + i * iWidth;
 			pDown = ucBinedImg + (i + 1)*iWidth;
 
-			for (int j = 1; j<iWidth - 1; j++)
+			for (int j = 1; j < iWidth - 1; j++)
 			{
 				pUp++;
 				pImg++;
@@ -819,7 +827,7 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 				np2 += x6 || x7;
 				np2 += x8 || x1;
 
-				npm = np1>np2 ? np2 : np1;
+				npm = np1 > np2 ? np2 : np1;
 				g2 = npm >= 2 && npm <= 3;
 				g3 = (x1 && (x2 || x3 || !x8)) == 0;
 				g4 = (x5 && (x6 || x7 || !x4)) == 0;
@@ -834,13 +842,13 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 
 		memcpy(ucBinedImg, ucThinnedImage, iWidth*iHeight);
 
-		for (int i = 1; i<iHeight - 1; i++)
+		for (int i = 1; i < iHeight - 1; i++)
 		{
 			pUp = ucBinedImg + (i - 1)*iWidth;
 			pImg = ucBinedImg + i * iWidth;
 			pDown = ucBinedImg + (i + 1)*iWidth;
 
-			for (int j = 1; j<iWidth - 1; j++)
+			for (int j = 1; j < iWidth - 1; j++)
 			{
 				pUp++;
 				pImg++;
@@ -878,7 +886,7 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 				np2 += x6 || x7;
 				np2 += x8 || x1;
 
-				npm = np1>np2 ? np2 : np1;
+				npm = np1 > np2 ? np2 : np1;
 				g2 = npm >= 2 && npm <= 3;
 				g3 = (x1 && (x2 || x3 || !x8)) == 0;
 				g4 = (x5 && (x6 || x7 || !x4)) == 0;
@@ -898,11 +906,11 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 		}
 	}
 
-	for (int i = 0; i<iHeight; i++)
+	for (int i = 0; i < iHeight; i++)
 	{
-		for (int j = 0; j<iWidth; j++)
+		for (int j = 0; j < iWidth; j++)
 		{
-			if (i<16)
+			if (i < 16)
 			{
 				ucThinnedImage[i*iWidth + j] = 0;
 			}
@@ -910,7 +918,7 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 			{
 				ucThinnedImage[i*iWidth + j] = 0;
 			}
-			else if (j<16)
+			else if (j < 16)
 			{
 				ucThinnedImage[i*iWidth + j] = 0;
 			}
@@ -923,6 +931,7 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 	return 0;
 }
 
+//指纹特征提取
 int FingerSolve::Extract(unsigned char * ucThinImg, unsigned char * ucMinuImg, int iWidth, int iHeight)
 {
 	unsigned char *pDest = ucMinuImg;
@@ -974,12 +983,234 @@ int FingerSolve::Extract(unsigned char * ucThinImg, unsigned char * ucMinuImg, i
 				++iMinuCount;
 			}
 		}
-		
+
 	}
 	return iMinuCount;
 
 }
 
+//特征点过滤
+int FingerSolve::DeEdgeMinu(minutiae * minutiaes, int count, unsigned char * ucImg, int iWidth, int iHeight)
+{
+	int minuCount = count;
+	int x, y, type;
+	int center_x, center_y;
+	bool del;
+	double k;//斜率
+
+	//初始化
+	int *pFlag = new int[minuCount];
+	k = iHeight*1.0 / iWidth;
+	//寻找指纹图像中心点
+	center_x = 0, center_y = 0;
+	for (int i = 0; i < minuCount; ++i) {
+		center_x += minutiaes[i].x;
+		center_y += minutiaes[i].y;
+	}
+	center_x /= minuCount;
+	center_y /= minuCount;
+	//舍弃指纹矩阵边角之外特征点
+	int min_x=0, max_x=0, min_y=0, max_y=0;
+	for (int i = 0; i < minuCount; ++i) {
+		minutiaes[i].x > max_x ? max_x = minutiaes[i].x : 1;
+		minutiaes[i].x < min_x ? min_x = minutiaes[i].x : 1;
+		minutiaes[i].y < min_y ? min_y = minutiaes[i].y : 1;
+		minutiaes[i].y > max_y ? max_y = minutiaes[i].y : 1;
+	}
+
+	double threshold = 0.25;
+	//计算舍弃范围（离中心点在各方向上10%外的点）
+	min_x = min_x + threshold *abs((center_x - min_x));
+	max_x = max_x - threshold *abs((center_x - max_x));
+	min_y = min_y + threshold *abs((center_y - min_y));
+	max_y = max_y - threshold *abs((center_y - max_y));
+
+	memset(pFlag, 0, sizeof(int)*minuCount);
+	for (int i = 0; i < minuCount; ++i)
+	{
+		//当前特征点信息
+		y = minutiaes[i].y;
+		x = minutiaes[i].x;
+
+		del = true;
+
+		//if (y < -k * x + iHeight) {
+		//	if (y < k*x)
+		//	{
+		//		//上
+		//		while (--y>=0)
+		//		{
+		//			if (ucImg[x + y * iWidth] > 0) {
+		//				del != del;
+		//				break;
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		//左
+		//		while (--x>=0)
+		//		{
+		//			if (ucImg[x + y*iWidth] > 0) {
+		//				del != del;
+		//				break;
+		//			}
+		//		}
+		//	}
+		//}
+		//else
+		//{
+		//	if (y < k*x) {
+		//		//右
+		//		while (++x<iWidth)
+		//		{
+		//			if (ucImg[x + y * iWidth] > 0) {
+		//				del != del;
+		//				break;
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		//下
+		//		while (++y<iHeight)
+		//		{
+		//			if (ucImg[x + y * iWidth] > 0) {
+		//				del != del;
+		//				break;
+		//			}
+		//		}
+		//	}
+		//}
+		if (x>min_x&&x<max_x&&y>min_x&&y<max_y)
+		{
+			del = false;
+		}
+
+		//del==true -> 边缘点 -> 删除
+		if (del)pFlag[i] = 1;//标记数组中设置为1（删除）
+
+	}
+
+	int newCount = 0;
+	//特征重排
+	for (int i = 0; i != minuCount; ++i)
+	{
+		if (pFlag[i] == 0)
+		{
+			memcpy(&minutiaes[newCount++], &minutiaes[i], sizeof(minutiae));
+		}
+	}
+
+	delete[] pFlag;
+	pFlag = NULL;
+
+	return newCount;
+}
+
+int FingerSolve::MinuFilter(byte * minuData, byte * thinData, minutiae * minutiaes, int & minuCount, int iWidth, int iHeight)
+{
+	float *dirs = new float[iWidth*iHeight];
+
+	memset(dirs, 0, iWidth*iHeight * sizeof(float));
+
+	//计算脊线方向
+	ImgDirection(thinData, dirs, iWidth, iHeight);
+
+	//提取特征点
+	byte * pImg;
+
+	int tmp = 0;
+	for (size_t i = 0; i < iHeight - 1; i++)
+	{
+		pImg = minuData + i * iWidth;
+		for (size_t j = 0; j < iWidth - 1; j++)
+		{
+			++ pImg;
+			if (*pImg>0)
+			{
+				minutiaes[tmp].x = j ;
+				minutiaes[tmp].y = i ;
+				minutiaes[tmp].theta = dirs[i*iWidth + j ];
+				minutiaes[tmp].type = *pImg;
+				++tmp;
+			}
+		}
+	}
+
+	delete[]dirs;
+
+	//去除边缘特征点
+	minuCount = DeEdgeMinu(minutiaes, minuCount, thinData, iWidth, iHeight);
+
+	//去除毛刺
+	int *pFlag = new int[minuCount];
+	memset(pFlag, 0, sizeof(int)*minuCount);
+
+	int x1, x2, y1, y2, type1, type2;
+	for (size_t i = 0; i < minuCount; i++)
+	{
+		x1 = minutiaes[i].x;
+		y1 = minutiaes[i].y;
+		type1 = minutiaes[i].type;
+		for (size_t j = i + 1; j < minuCount; j++)
+		{
+			if (pFlag[j] == 1)continue;//已经删除的特征点,直接跳过
+
+			x2 = minutiaes[j].x;
+			y2 = minutiaes[j].y;
+			type2 = minutiaes[j].type;
+
+			int d = (int)sqrt(float((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)));
+
+			//临近点才有关系
+			if (d <= 6)
+			{
+				if (type1 == type2)//两个点相同类型
+				{
+					if (type1 == 1) //间断
+					{
+						pFlag[i] = 1;
+						pFlag[j] = 1;
+					}
+					else //小岛
+					{
+						pFlag[j] = 1;
+					}
+				}
+				else if (type1 == 1) //点1是端点
+				{
+					pFlag[i] = 1;
+				}
+				else//点2是端点
+				{
+					pFlag[j] = 1;
+				}
+			}
+
+
+		}
+	}
+
+	int newCount = 0;
+	for (int i = 0; i != minuCount; ++i)
+	{
+		if (pFlag[i] == 0)
+		{
+			memcpy(&minutiaes[newCount++], &minutiaes[i], sizeof(minutiae));
+		}
+	}
+
+	minuCount = newCount;
+	
+	delete[] pFlag;
+
+	return 0;
+}
+
+
+
+//保存图像
 int FingerSolve::SaveDataToImageFile(char * srcFile, char * dstFile, unsigned char * data)
 {
 	CopyFile(ToWideChar(srcFile), ToWideChar(dstFile), false);
@@ -987,6 +1218,7 @@ int FingerSolve::SaveDataToImageFile(char * srcFile, char * dstFile, unsigned ch
 	return 0;
 }
 
+//保存图像
 int FingerSolve::SaveDataToImageFile(char * srcFile, char * dstFile, float * data, int iWidth, int iHeight, int iDepth, float scale)
 {
 	CopyFile(ToWideChar(srcFile), ToWideChar(dstFile), false);

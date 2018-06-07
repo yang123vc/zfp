@@ -1,4 +1,25 @@
 ﻿#pragma once
+
+//相邻特诊点结构
+struct neighbor {
+	int x;//x坐标
+	int y;//y坐标
+	int type;//1-端点，3-分岔点
+	float Theta;//两点连线角度
+	float Theta2Ridge; //两点脊线方向夹角
+	float TheaThisNibor;//相邻特征点的脊线方向
+	int distance;//两点距离
+};
+
+//特征点结构
+struct minutiae {
+	int x;
+	int y;
+	int type;
+	float theta;//脊线方向
+	neighbor * neibors;//相邻点特征信息
+};
+
 class FingerSolve
 {
 public:
@@ -20,6 +41,8 @@ public:
 	static int Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedImage,
 		int iWidth, int iHeight, int iIterativeLimit);
 	static int Extract(unsigned char *ucThinImg, unsigned char *ucMinuImg, int iWidth, int iHeight);
+	static int DeEdgeMinu(minutiae * minutiaes, int count,unsigned char * ucImg,int iWidth,int iHeight);
+	static int MinuFilter(byte * minuData, byte * thinData, minutiae *minutiaes, int &minuCount, int iWidth, int iHeight);
 
 
 	static int SaveDataToImageFile(char *srcFile, char *dstFile, unsigned char *data);
