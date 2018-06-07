@@ -926,7 +926,7 @@ int FingerSolve::Thinning(unsigned char * ucBinedImg, unsigned char * ucThinnedI
 int FingerSolve::Extract(unsigned char * ucThinImg, unsigned char * ucMinuImg, int iWidth, int iHeight)
 {
 	unsigned char *pDest = ucMinuImg;
-	unsigned char *pUp, *pDown, *pImg;
+	unsigned char *pUp, *pImg, *pDown;
 	unsigned char x1, x2, x3, x4, x5, x6, x7, x8;
 	unsigned char nc;
 	int iMinuCount = 0;
@@ -945,10 +945,10 @@ int FingerSolve::Extract(unsigned char * ucThinImg, unsigned char * ucMinuImg, i
 			pImg++;
 			pDown++;
 
-			//if (!*pImg)
-			//{
-			//	continue;
-			//}
+			if (!*pImg)
+			{
+				continue;
+			}
 
 			x6 = *(pUp - 1);
 			x5 = *(pImg - 1);
@@ -974,8 +974,9 @@ int FingerSolve::Extract(unsigned char * ucThinImg, unsigned char * ucMinuImg, i
 				++iMinuCount;
 			}
 		}
-		return iMinuCount;
+		
 	}
+	return iMinuCount;
 
 }
 
