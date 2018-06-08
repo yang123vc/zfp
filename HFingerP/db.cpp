@@ -32,7 +32,7 @@ int db::InsertNewMinu(MINURECORD *record)
 	opendb();
 	sqlite3_stmt *stat;
 	sqlite3_prepare(_db, "insert into MINUTIAES(ID,NAME, MINU,MINUCOUNT) values(null,?, ? ,?)", -1, &stat, 0);
-	sqlite3_bind_text16(stat, 1, record->name, sizeof(record->name), NULL);//第一个参数（登记人姓名）
+	sqlite3_bind_text16(stat, 1, record->name, wcslen(record->name)*sizeof(wchar_t), NULL);//第一个参数（登记人姓名）
 	sqlite3_bind_blob(stat, 2, record->minu, sizeof(minutiae)*record->minuCount, NULL);//第二个参数（指纹特征）
 	sqlite3_bind_int(stat, 3, record->minuCount);//第二个参数（指纹特征）
 	int r = sqlite3_step(stat);//执行statment
