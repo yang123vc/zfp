@@ -17,6 +17,7 @@ public:
 	int GetNewIndexDB();
 	int InsertNewMinu(MINURECORD *record);
 	int GetMinu(wchar_t name, MINURECORD * record);
+	int GetMinu(MINURECORD ** record, int * recordCount);
 	int GetMinu(int index, MINURECORD * record);
 	~db();
 private:

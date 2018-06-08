@@ -1,4 +1,4 @@
-# Introduction 
+# Introduction
 基于中控指纹识别器的指纹识别课程项目（课程指导项目代码+个人实现）
 
 # Content
@@ -31,5 +31,9 @@
         |NAME|TEXT16|UNICODE类型字符串 \| 名字|
         |MINU|BLOB|指纹特征点二进制数据|
         |MINUCOUNT|INT|指纹特征点数量|
-
+      - 发现VS2017 15.7 bug ：代码注释太长的情况下，代码提示导致IDE假死——2018.6
+      - SQLite 执行查询语句无法直接返回查询条数。解决方法：先执行count(*)获得行数。
+          ```SQL
+          select count(*) from xxxx [conditons];
+          ```
 2. 其他

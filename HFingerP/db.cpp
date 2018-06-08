@@ -49,6 +49,43 @@ int db::GetMinu(wchar_t name, MINURECORD * record)
 	return 0;
 }
 
+//获取所有指纹登记信息
+int db::GetMinu(MINURECORD ** record, int * recordCount)
+{
+	sqlite3_stmt *stmt_count,*stmt;
+	int count=0;
+	opendb();
+	sqlite3_prepare(_db, "select count(*) from MINUTIAES;", -1, &stmt_count, NULL);
+	while (sqlite3_step(stmt_count)==SQLITE_ROW)
+	{
+		count = sqlite3_column_int(stmt_count, 0);
+	};
+	sqlite3_finalize(stmt_count);
+	//单独查询条数结束（sqlite3的不爽之处）
+	//初始化返回数据结构
+	*recordCount = count; // 返回指纹记录总条数
+	*record = new MINURECORD[count];
+
+	sqlite3_prepare(_db, "select * from MINUTIAES;", -1, &stmt, NULL);
+	//sqlite3_bind_int(stmt, 1, index);
+	count = 0;
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		//执行stmt
+		(*record)[count].ID = sqlite3_column_int(stmt, 0);
+		int nameSize = sizeof((wchar_t*)sqlite3_column_text16(stmt, 1)) / 2;
+		(*record)[count].name = new wchar_t[nameSize + 2];
+		(*record)[count].name[nameSize] = '\0';
+		memcpy((*record)[count].name, (wchar_t*)sqlite3_column_text16(stmt, 1), nameSize * 2);
+		(*record)[count].minuCount = sqlite3_column_int(stmt, 3);
+		(*record)[count].minu = new minutiae[(*record)[count].minuCount];
+		memcpy((*record)[count].minu, (minutiae*)sqlite3_column_blob(stmt, 2), (*record)[count].minuCount * sizeof(minutiae));
+		++count;
+	}
+	sqlite3_finalize(stmt);
+	closedb();
+	return 0;
+}
+
 /*
 按指纹序号获取指纹登记信息
 return -1,错误，return 0 正确;
@@ -57,8 +94,8 @@ int db::GetMinu(int index, MINURECORD * record)
 {
 	sqlite3_stmt *stmt;
 	opendb();
-	sqlite3_prepare(_db, "select * from MINUTIAES where ID=1;", -1, &stmt, NULL);
-	//sqlite3_bind_int(stmt, 1, index);
+	sqlite3_prepare(_db, "select * from MINUTIAES where ID=?;", -1, &stmt, NULL);
+	sqlite3_bind_int(stmt, 1, index);
 	while (sqlite3_step(stmt) == SQLITE_ROW) {
 		//执行stmt
 		record->ID = sqlite3_column_int(stmt, 0);

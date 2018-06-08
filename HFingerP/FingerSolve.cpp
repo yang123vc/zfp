@@ -68,7 +68,7 @@ wchar_t * FingerSolve::ToWideChar(char * str)
 int FingerSolve::readBMP2buf(char * filename, unsigned char ** data, int &rWidth, int&rHeight, int&iDepth)
 {
 	CImage image;
-	
+
 	HRESULT r = image.Load(ToWideChar(filename));
 	if (FAILED(r) || image.IsNull()) {
 		return -1;
@@ -1000,7 +1000,7 @@ int FingerSolve::DeEdgeMinu(minutiae * minutiaes, int count, unsigned char * ucI
 
 	//初始化
 	int *pFlag = new int[minuCount];
-	k = iHeight*1.0 / iWidth;
+	k = iHeight * 1.0 / iWidth;
 	//寻找指纹图像中心点
 	center_x = 0, center_y = 0;
 	for (int i = 0; i < minuCount; ++i) {
@@ -1010,7 +1010,7 @@ int FingerSolve::DeEdgeMinu(minutiae * minutiaes, int count, unsigned char * ucI
 	center_x /= minuCount;
 	center_y /= minuCount;
 	//舍弃指纹矩阵边角之外特征点
-	int min_x=0, max_x=0, min_y=0, max_y=0;
+	int min_x = 0, max_x = 0, min_y = 0, max_y = 0;
 	for (int i = 0; i < minuCount; ++i) {
 		minutiaes[i].x > max_x ? max_x = minutiaes[i].x : 1;
 		minutiaes[i].x < min_x ? min_x = minutiaes[i].x : 1;
@@ -1020,10 +1020,10 @@ int FingerSolve::DeEdgeMinu(minutiae * minutiaes, int count, unsigned char * ucI
 
 	double threshold = 0.25;
 	//计算舍弃范围（离中心点在各方向上10%外的点）
-	min_x = min_x + threshold *abs((center_x - min_x));
-	max_x = max_x - threshold *abs((center_x - max_x));
-	min_y = min_y + threshold *abs((center_y - min_y));
-	max_y = max_y - threshold *abs((center_y - max_y));
+	min_x = min_x + threshold * abs((center_x - min_x));
+	max_x = max_x - threshold * abs((center_x - max_x));
+	min_y = min_y + threshold * abs((center_y - min_y));
+	max_y = max_y - threshold * abs((center_y - max_y));
 
 	memset(pFlag, 0, sizeof(int)*minuCount);
 	for (int i = 0; i < minuCount; ++i)
@@ -1082,7 +1082,7 @@ int FingerSolve::DeEdgeMinu(minutiae * minutiaes, int count, unsigned char * ucI
 		//		}
 		//	}
 		//}
-		if (x>min_x&&x<max_x&&y>min_x&&y<max_y)
+		if (x > min_x&&x<max_x&&y>min_x&&y < max_y)
 		{
 			del = false;
 		}
@@ -1126,12 +1126,12 @@ int FingerSolve::MinuFilter(byte * minuData, byte * thinData, minutiae * minutia
 		pImg = minuData + i * iWidth;
 		for (size_t j = 0; j < iWidth - 1; j++)
 		{
-			++ pImg;
-			if (*pImg>0)
+			++pImg;
+			if (*pImg > 0)
 			{
-				minutiaes[tmp].x = j ;
-				minutiaes[tmp].y = i ;
-				minutiaes[tmp].theta = dirs[i*iWidth + j ];
+				minutiaes[tmp].x = j;
+				minutiaes[tmp].y = i;
+				minutiaes[tmp].theta = dirs[i*iWidth + j];
 				minutiaes[tmp].type = *pImg;
 				++tmp;
 			}
@@ -1161,7 +1161,7 @@ int FingerSolve::MinuFilter(byte * minuData, byte * thinData, minutiae * minutia
 			y2 = minutiaes[j].y;
 			type2 = minutiaes[j].type;
 
-			int d = (int)sqrt(float((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)));
+			int d = (int)sqrt(float((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2)));
 
 			//临近点才有关系
 			if (d <= 6)
@@ -1202,13 +1202,194 @@ int FingerSolve::MinuFilter(byte * minuData, byte * thinData, minutiae * minutia
 	}
 
 	minuCount = newCount;
-	
+
 	delete[] pFlag;
 
 	return 0;
 }
 
+//返回两个点的线段倾斜度
+float FingerSolve::AngleOfPoints(int x1, int y1, int x2, int y2)
+{
+	const float PI = 3.1415925535;
+	float deltaY, deltaX, theta = 0.0f;
+	deltaX = x2 - x1;
+	deltaY = y2 - y1;
+	if (deltaX > 0 && deltaY < 0) {
+		theta = atan2(deltaY, -1 * deltaX);
+	}
+	else if (deltaY < 0 && deltaX < 0)
+	{
+		theta = PI - atan2(-1 * deltaY, -1 * deltaX);
+	}
+	else if (deltaY < 0 && deltaX > 0)
+	{
+		theta = atan2(-1 * deltaY, deltaX);
+	}
+	else if (deltaY < 0 && deltaX < 0)
+	{
+		theta = PI - atan2(-1 * deltaY, -1 * deltaX);
+	}
+	else if (deltaX == 0)
+	{
+		theta = PI / 2;
+	}
+	else
+	{
+		theta = 0;
+	}
 
+	return theta;
+}
+
+//建立特征点之间的相邻关系
+int FingerSolve::BuildNeighborsShip(minutiae * minus, int minuCount)
+{
+	const int MAX_NEIBORS = 10;//每个特征点最多的相邻点
+	int x1, x2, y1, y2;
+	int * pFlag = new int[minuCount];
+	for (size_t i = 0; i < minuCount; i++)
+	{
+		x1 = minus[i].x;
+		y1 = minus[i].y;
+
+		//初始化当前特征点相邻特征点标记
+		memset(pFlag, 0, sizeof(int)*minuCount);//全0（不相邻）
+		pFlag[i] = 1;//将自身标记为相邻
+
+		//初始化当前特征点相邻数组结构
+		minus[i].neibors = new neighbor[MAX_NEIBORS];
+		memset(minus[i].neibors, 0, sizeof(neighbor)*MAX_NEIBORS);
+
+		for (size_t neiborNo = 0; neiborNo < MAX_NEIBORS; neiborNo++)
+		{
+			//查找距离最小的特征点
+			unsigned int minDist = 0xffff;//最小距离特征点距离
+			int minNo = 0;//最小距离特征点下标
+
+			for (size_t j = 0; j < minuCount; j++)
+			{
+				if (pFlag[i] == 0)
+				{
+					x2 = minus[j].x;
+					y2 = minus[j].y;
+					int dtmp = (int)sqrt(float((y1 - y2)*(y1 - y2) + (x1 - x2)*(x1 - x2)));
+					if (dtmp < minDist)
+					{
+						minDist = dtmp;
+						minNo = j;
+					}
+				}
+			}
+
+			//保存结果
+			pFlag[minNo] = 1;//设置相邻
+			minus[i].neibors[neiborNo].x = minus[minNo].x;
+			minus[i].neibors[neiborNo].y = minus[minNo].y;
+			minus[i].neibors[neiborNo].type = minus[minNo].type;
+			minus[i].neibors[neiborNo].Theta = AngleOfPoints(minus[minNo].x, minus[minNo].y, x1, y1);
+			minus[i].neibors[neiborNo].Theta2Ridge = minus[minNo].theta - minus[minNo].theta;
+			minus[i].neibors[neiborNo].TheaThisNibor = minus[minNo].theta;//相邻特征点的脊线方向
+			minus[i].neibors[neiborNo].distance = minDist;
+		}
+	}
+
+	delete[] pFlag;
+	return 0;
+}
+
+//计算两个特征点的相似度
+float FingerSolve::MinuSimilarity(int iWidth, int iHeight, minutiae * minutiae1, int count1, minutiae * minutiae2, int count2)
+{
+	const int MAX_SIMILAR_PAIR = 100;
+	const int MAX_NEIGHBOR_EACH = 10;
+
+	BuildNeighborsShip(minutiae1, count1);
+	BuildNeighborsShip(minutiae2, count2);
+
+	int similarPair[MAX_SIMILAR_PAIR][2];
+	memset(similarPair, 0, 100 * 2 * sizeof(int));
+
+	minutiae* baseminutiae;
+	minutiae* refminutiae;
+	int baseAccount, refAccount;
+
+	if (count1 < count2)
+	{
+		baseminutiae = minutiae1;
+		baseAccount = count1;
+		refminutiae = minutiae2;
+		refAccount = count2;
+	}
+	else
+	{
+		baseminutiae = minutiae2;
+		baseAccount = count2;
+		refminutiae = minutiae1;
+		refAccount = count1;
+	}
+
+	neighbor *baseNeighbors = NULL;
+	neighbor *refNeighbors = NULL;
+	int similarminutiae = 0;
+	float baseTheta, refTheta;
+
+	for (int i = 0; i < baseAccount; i++)
+	{
+		baseNeighbors = baseminutiae[i].neibors;
+		baseTheta = baseminutiae[i].theta;
+		int refSimilarNo = 0;
+		int maxSimilarNeibors = 0;
+		for (int j = 0; j < refAccount; j++)
+		{
+			if (refminutiae[j].type != baseminutiae[i].type)
+			{
+				continue;
+			}
+			refNeighbors = refminutiae[j].neibors;
+			refTheta = refminutiae[j].theta;
+
+
+			int thisSimilarNeigbors = 0;
+
+			for (int m = 0; m < MAX_NEIGHBOR_EACH; m++)
+			{
+				for (int n = 0; n < MAX_NEIGHBOR_EACH; n++)
+				{
+					if (baseNeighbors[m].type != refNeighbors[n].type)
+					{
+						continue;
+
+					}
+					int dist = abs(int(baseNeighbors[m].distance - refNeighbors[n].distance));
+					float theta1 = float((baseNeighbors[m].Theta - baseTheta) - (refNeighbors[n].Theta - refTheta));
+					float theta2 = float(baseNeighbors[m].Theta2Ridge - refNeighbors[n].Theta2Ridge);
+					float theta3 = float((baseNeighbors[m].Theta - baseNeighbors[m].TheaThisNibor) - (refNeighbors[n].Theta - refNeighbors[n].TheaThisNibor));
+					if (theta1 < 0)theta1 = -theta1;
+					if (theta2 < 0)theta2 = -theta2;
+					if (theta3 < 0)theta3 = -theta3;
+
+					if (dist < 4 && theta1 < 0.15f&&theta2 < 0.15f&&theta3 < 0.15f);
+					{
+						++thisSimilarNeigbors;
+						break;
+					}
+				}
+			}
+			if ((thisSimilarNeigbors >= MAX_NEIGHBOR_EACH * 3 / 10) && (similarminutiae < MAX_SIMILAR_PAIR))
+			{
+				similarPair[similarminutiae][0] = i;
+				similarPair[similarminutiae][1] = refSimilarNo;
+				++similarminutiae;
+			}
+		}
+	}
+	float similarity = similarminutiae / 8.0f;
+
+	similarity = similarminutiae < 2 ? 0.0f : similarity;
+	similarity = similarminutiae > 8 ? 1.0f : similarity;
+	return similarity;
+}
 
 //保存图像
 int FingerSolve::SaveDataToImageFile(char * srcFile, char * dstFile, unsigned char * data)
