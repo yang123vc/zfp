@@ -1362,12 +1362,9 @@ float FingerSolve::MinuSimilarity(int iWidth, int iHeight, minutiae * minutiae1,
 
 					}
 					int dist = abs(int(baseNeighbors[m].distance - refNeighbors[n].distance));
-					float theta1 = float((baseNeighbors[m].Theta - baseTheta) - (refNeighbors[n].Theta - refTheta));
-					float theta2 = float(baseNeighbors[m].Theta2Ridge - refNeighbors[n].Theta2Ridge);
-					float theta3 = float((baseNeighbors[m].Theta - baseNeighbors[m].TheaThisNibor) - (refNeighbors[n].Theta - refNeighbors[n].TheaThisNibor));
-					if (theta1 < 0)theta1 = -theta1;
-					if (theta2 < 0)theta2 = -theta2;
-					if (theta3 < 0)theta3 = -theta3;
+					float theta1 = fabs(float((baseNeighbors[m].Theta - baseTheta) - (refNeighbors[n].Theta - refTheta)));
+					float theta2 = fabs(float(baseNeighbors[m].Theta2Ridge - refNeighbors[n].Theta2Ridge));
+					float theta3 = fabs(float((baseNeighbors[m].Theta - baseNeighbors[m].TheaThisNibor) - (refNeighbors[n].Theta - refNeighbors[n].TheaThisNibor)));
 
 					if (dist < 4 && theta1 < 0.15f&&theta2 < 0.15f&&theta3 < 0.15f);
 					{
