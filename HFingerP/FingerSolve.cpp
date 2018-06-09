@@ -1386,8 +1386,8 @@ float FingerSolve::MinuSimilarity(int iWidth, int iHeight, minutiae * minutiae1,
 	}
 	float similarity = similarminutiae / 8.0f;
 
-	similarity = similarminutiae < 2 ? 0.0f : similarity;
-	similarity = similarminutiae > 8 ? 1.0f : similarity;
+	similarity = similarminutiae < 20 ? 0.0f : similarity;
+	similarity = similarminutiae > 40 ? 1.0f : similarity;
 	return similarity;
 }
 
