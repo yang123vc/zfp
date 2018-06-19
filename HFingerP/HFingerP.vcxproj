@@ -226,6 +226,8 @@
     <None Include="res\HFingerP.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="C:\Users\nbice\Desktop\bg.bmp" />
+    <Image Include="C:\Users\nbice\Desktop\Finger_Done.bmp" />
     <Image Include="res\HFingerP.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

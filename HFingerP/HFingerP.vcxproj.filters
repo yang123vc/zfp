@@ -86,5 +86,11 @@
     <Image Include="res\HFingerP.ico">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="C:\Users\nbice\Desktop\bg.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="C:\Users\nbice\Desktop\Finger_Done.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

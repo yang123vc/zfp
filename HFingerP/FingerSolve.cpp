@@ -1215,18 +1215,18 @@ float FingerSolve::AngleOfPoints(int x1, int y1, int x2, int y2)
 	float deltaY, deltaX, theta = 0.0f;
 	deltaX = x2 - x1;
 	deltaY = y2 - y1;
-	if (deltaX > 0 && deltaY < 0) {
+	if (deltaY > 0 && deltaX < 0) {
 		theta = atan2(deltaY, -1 * deltaX);
 	}
 	else if (deltaY < 0 && deltaX < 0)
 	{
-		theta = PI - atan2(-1 * deltaY, -1 * deltaX);
+		theta = PI - atan2(-1 * deltaY, -1 * deltaX);//ok
 	}
 	else if (deltaY < 0 && deltaX > 0)
 	{
-		theta = atan2(-1 * deltaY, deltaX);
+		theta = atan2(-1 * deltaY, deltaX);//ok
 	}
-	else if (deltaY < 0 && deltaX < 0)
+	else if (deltaY > 0 && deltaX > 0)
 	{
 		theta = PI - atan2(-1 * deltaY, -1 * deltaX);
 	}
@@ -1264,21 +1264,22 @@ int FingerSolve::BuildNeighborsShip(minutiae * minus, int minuCount)
 		for (size_t neiborNo = 0; neiborNo < MAX_NEIBORS; neiborNo++)
 		{
 			//查找距离最小的特征点
-			unsigned int minDist = 0xffff;//最小距离特征点距离
+			unsigned int minDist = 10000;//最小距离特征点距离
 			int minNo = 0;//最小距离特征点下标
 
 			for (size_t j = 0; j < minuCount; j++)
 			{
-				if (pFlag[i] == 0)
+				if (pFlag[i] == 1)
 				{
-					x2 = minus[j].x;
-					y2 = minus[j].y;
-					int dtmp = (int)sqrt(float((y1 - y2)*(y1 - y2) + (x1 - x2)*(x1 - x2)));
-					if (dtmp < minDist)
-					{
-						minDist = dtmp;
-						minNo = j;
-					}
+					continue;
+				}
+				x2 = minus[j].x;
+				y2 = minus[j].y;
+				int dtmp = (int)sqrt(float((y1 - y2)*(y1 - y2) + (x1 - x2)*(x1 - x2)));
+				if (dtmp < minDist)
+				{
+					minDist = dtmp;
+					minNo = j;
 				}
 			}
 
@@ -1288,7 +1289,7 @@ int FingerSolve::BuildNeighborsShip(minutiae * minus, int minuCount)
 			minus[i].neibors[neiborNo].y = minus[minNo].y;
 			minus[i].neibors[neiborNo].type = minus[minNo].type;
 			minus[i].neibors[neiborNo].Theta = AngleOfPoints(minus[minNo].x, minus[minNo].y, x1, y1);
-			minus[i].neibors[neiborNo].Theta2Ridge = minus[minNo].theta - minus[minNo].theta;
+			minus[i].neibors[neiborNo].Theta2Ridge = minus[minNo].theta - minus[i].theta;
 			minus[i].neibors[neiborNo].TheaThisNibor = minus[minNo].theta;//相邻特征点的脊线方向
 			minus[i].neibors[neiborNo].distance = minDist;
 		}
@@ -1308,7 +1309,7 @@ float FingerSolve::MinuSimilarity(int iWidth, int iHeight, minutiae * minutiae1,
 	BuildNeighborsShip(minutiae2, count2);
 
 	int similarPair[MAX_SIMILAR_PAIR][2];
-	memset(similarPair, 0, 100 * 2 * sizeof(int));
+	memset(similarPair, 0, MAX_SIMILAR_PAIR * 2 * sizeof(int));
 
 	minutiae* baseminutiae;
 	minutiae* refminutiae;
@@ -1366,7 +1367,7 @@ float FingerSolve::MinuSimilarity(int iWidth, int iHeight, minutiae * minutiae1,
 					float theta2 = fabs(float(baseNeighbors[m].Theta2Ridge - refNeighbors[n].Theta2Ridge));
 					float theta3 = fabs(float((baseNeighbors[m].Theta - baseNeighbors[m].TheaThisNibor) - (refNeighbors[n].Theta - refNeighbors[n].TheaThisNibor)));
 
-					if (dist < 4 && theta1 < 0.15f&&theta2 < 0.15f&&theta3 < 0.15f);
+					if (dist < 2 && theta1 < 0.10f&&theta2 < 0.10f&&theta3 < 0.10f);
 					{
 						++thisSimilarNeigbors;
 						break;
@@ -1383,8 +1384,8 @@ float FingerSolve::MinuSimilarity(int iWidth, int iHeight, minutiae * minutiae1,
 	}
 	float similarity = similarminutiae / 8.0f;
 
-	similarity = similarminutiae < 20 ? 0.0f : similarity;
-	similarity = similarminutiae > 40 ? 1.0f : similarity;
+	similarity = similarity < 2 ? 0.0f : similarity;
+	similarity = similarity > 10 ? 1.0f : similarity;
 	return similarity;
 }
 
